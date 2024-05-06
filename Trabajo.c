@@ -23,7 +23,7 @@ int main()
     // Abre el archivo en modo lectura
     FILE *archivo;
 
-    archivo = fopen("test.txt", "r");
+    archivo = fopen("test60.txt", "r");
 
     if (archivo == NULL)
     {
@@ -71,6 +71,7 @@ int main()
     double M = datos[1];
     double alfa = 0.4;
     double criterio = (M * alfa);
+    double distancias;
 
     // Leer y almacenar los componentes de cada vector
     double vectores[N][DIM];
@@ -82,38 +83,43 @@ int main()
         }
     }
 
-    //Crear la lista de elementos y de pivotes, para ser llenada mas adelante con el criterio
+    // Crear la lista de elementos y de pivotes, para ser llenada mas adelante con el criterio
     int pivotes[N];
     int num_pivotes = 1;
-    pivotes[0]=0;
+    pivotes[0] = 0;
 
     int elementos[N];
     // Aca empezamos a usar hilos, se reparten el trabajo de calcular la distancia euclidiana
     // para descubrir los pivotes
     omp_set_num_threads(N_THREADS);
-    #pragma omp parallel for shared(vectores, criterio)
+#pragma omp parallel for shared(vectores, criterio)
     // Primero hacemos un barrido desde el P0 para encontrar los pivotes
-    for (int i = 0; i < N; i++) {
-       /* for (int j = 0; i < num_pivotes; i++)
+    for (int i = 0; i < N; i++)
+    {
+        int j;
+        for (j = 0; j < num_pivotes; j++)
         {
-        }*/
-        
-        double distancias = euclideanDistance(vectores[0], vectores[i], DIM);
-        if (distancias < (criterio))
-        { //Si no cumple el criterio de estar al menos a M*a
-            printf("Pivote: vector %d\n", (i + 1));
-            // se añada a la lista de pivote
+            distancias = euclideanDistance(vectores[pivotes[j]], vectores[i], DIM);
+            if (distancias < (criterio))
+            { // Si no cumple el criterio de estar al menos a M*a
+            break;
+            }
         }
-        else
-        { //Si cumple el criterio se añade a la lista
-            printf("No pivote: vector %d\n", (i + 1));
-            // se añade a la lista de no pivote
+        if (j == num_pivotes)
+        {
+            pivotes[num_pivotes++] = i;
         }
+        // Si cumple el criterio se añade a la lista
     }
 
-    // Libera la memoria asignada al array
-    free(datos);
-    free(vectores);
+printf("Lista de pivotes:\n");
+for (int i = 0; i < num_pivotes; i++) {
+    printf("Pivote %d: vector %d\n", (i+1), pivotes[i]);
+}
 
-    return 0;
+// Libera la memoria asignada al array
+free(datos);
+free(vectores);
+
+return 0;
 }
